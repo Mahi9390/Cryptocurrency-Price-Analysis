@@ -1,0 +1,40 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# Virtual environments
+venv/
+.venv*/
+.env*/
+myenv/
+store/
+cryptobitcoin/store/
+
+# Django
+*.log
+local_settings.py
+staticfiles/
+media/*
+!media/*.txt
+
+# Databases
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.iml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Packaging
+build/
+dist/
+.eggs/
+*.egg-info/
