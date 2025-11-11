@@ -10,6 +10,7 @@ The main goal of the project is to allow admins, agents, and users to interact i
 It integrates machine learning for price forecasting, data visualization, and a blockchain ledger to maintain secure crypto transactions.
 
 🧱 Modules in the Project
+
 🔹 1. Admin Module
 
 The Admin has complete control over the system.
