@@ -1,0 +1,33 @@
+{% extends 'agents/agentbase.html' %}
+{% block contents %}
+<section class="py-5">
+  <div class="container">
+    <h3 class="text-center mb-4">{{ coin }} - 7 Day Price Prediction</h3>
+    <div class="card shadow">
+      <div class="card-body">
+        <canvas id="predictionChart" height="100"></canvas>
+      </div>
+    </div>
+    <div class="text-center mt-3">
+      <a href="{% url 'agents:AgentPredectionTest' %}" class="btn btn-primary">Back to Datasets</a>
+    </div>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const ctx = document.getElementById('predictionChart').getContext('2d');
+  const chartData = {{ chart_data|safe }};
+  new Chart(ctx, {
+    type: 'line',
+    data: chartData,
+    options: {
+      responsive: true,
+      scales: {
+        y: { title: { display: true, text: 'Price (USD)' } },
+        x: { title: { display: true, text: 'Date' } }
+      }
+    }
+  });
+</script>
+{% endblock %}

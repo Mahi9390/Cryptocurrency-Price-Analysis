@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area py-5" style="background: linear-gradient(to right, #f0f4f8, #d9e2ec);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-lg rounded p-4 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #9786bfff, #060606ff); color: #ffffff; border: none;">
+
+          <h2 class="text-center mb-4 fw-bold" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.3);">User Login</h2>
+
+          <!-- Login Form -->
+          <form method="post" action="{% url 'users:userlogincheck' %}">
+            {% csrf_token %}
+            <div class="mb-3">
+              <label for="email" class="form-label">Email address*</label>
+              <input type="email" name="email" class="form-control" id="email" placeholder="Enter email" required style="border-radius: 8px;">
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password*</label>
+              <input type="password" name="pswd" class="form-control" id="password" placeholder="Enter password" required style="border-radius: 8px;">
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-light btn-block fw-bold" style="transition: 0.3s; border-radius: 8px;">Sign In</button>
+            </div>
+          </form>
+
+          <!-- Messages -->
+          {% if messages %}
+          <div class="mt-3">
+            {% for message in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <!-- Signup Link -->
+          <p class="mt-4 text-center">New here? <a href="{% url 'users:userlogincheck' %}" style="color: #ffe066;">Create an account</a></p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Add Animate.css CDN for animations -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+{% endblock %}

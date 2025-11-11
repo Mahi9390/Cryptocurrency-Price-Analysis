@@ -1,0 +1,71 @@
+{% extends 'agents/agentbase.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="block p-4 shadow-sm bg-white rounded">
+                    <!-- Ledger Header -->
+                    <h2 style="color: black;">Current Ledger Blocks is ${{ ledger }}</h2>
+                    <p style="color: black;">Current Transactions</p>
+
+                    <!-- Transactions Table -->
+                    <div class="table-responsive">
+                        <table class="table" style="border: 3px solid black; border-collapse: collapse;">
+                            <thead style="color: white; background-color: #070707ff;">
+                                <tr>
+                                    <th style="border: 2px solid black;">S.No</th>
+                                    <th style="border: 2px solid black;">Customer Email</th>
+                                    <th style="border: 2px solid black;">Agent Email</th>
+                                    <th style="border: 2px solid black;">Coin Name</th>
+                                    <th style="border: 2px solid black;">Quantity</th>
+                                    <th style="border: 2px solid black;">Paid Amount</th>
+                                    <th style="border: 2px solid black;">Ledger Balance</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: black;">
+                                {% for i in objects %}
+                                <tr>
+                                    <td style="border: 2px solid black;">{{ forloop.counter }}</td>
+                                    <td style="border: 2px solid black;">{{ i.customeremail }}</td>
+                                    <td style="border: 2px solid black;">{{ i.agentemail }}</td>
+                                    <td style="border: 2px solid black;">{{ i.currencyname }}</td>
+                                    <td style="border: 2px solid black;">{{ i.quantity }}</td>
+                                    <td style="border: 2px solid black;">$ {{ i.paidammout }}</td>
+                                    <td style="border: 2px solid black;">$ {{ i.blockchainmoney }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Rates Section -->
+                    <p style="color: black;">Date: 28-Sept-2019 Trading Rates of the Crypto Currencies</p>
+                    <div class="table-responsive">
+                        <table class="table" style="border: 2px solid black; border-collapse: collapse; color: black;">
+                            <tbody>
+                                <tr>
+                                    <td style="border: 2px solid black;">1 ₿ = Bitcoin</td>
+                                    <td style="border: 2px solid black;">$ 8152.5</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 2px solid black;">1 Etherum</td>
+                                    <td style="border: 2px solid black;">$ 173.27</td>
+                                </tr>
+                                <tr>
+                                    <td style="border: 2px solid black;">1 Ripple</td>
+                                    <td style="border: 2px solid black;">$ 0.243036</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends 'agents/agentbase.html' %}
+{% block contents %}
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow">
+          <div class="card-body">
+            <h4>Select Coin for Prediction</h4>
+            <p><strong>Dataset:</strong> {{ dataset.file.name|cut:"datasets/" }}</p>
+            <form method="post" action="{% url 'agents:predict_coin' %}">
+              {% csrf_token %}
+              <input type="hidden" name="dataset_id" value="{{ dataset.id }}">
+              <div class="mb-3">
+                <select name="coin" class="form-select" required>
+                  <option value="">-- Choose Coin --</option>
+                  {% for coin in coins %}
+                  <option value="{{ coin }}">{{ coin }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+              <button type="submit" class="btn btn-success">Predict 7 Days</button>
+              <a href="{% url 'agents:AgentPredectionTest' %}" class="btn btn-secondary">Back</a>
+            </form>0
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

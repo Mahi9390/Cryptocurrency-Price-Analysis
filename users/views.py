@@ -1,20 +1,20 @@
-from django.shortcuts import render, HttpResponse,redirect
-from .models import BitUserRegisterModel, CustomerHadCoins, UserBuyingCryptoModel,BlockChainLedger
+from django.shortcuts import render, redirect
 from django.contrib import messages
+from .models import BitUserRegisterModel, CustomerHadCoins, UserBuyingCryptoModel, BlockChainLedger, UserPredictionModel
 from agents.models import AgentHadCrypto
-from admins.models import cryptcurrencyratemodel
-from django.conf import settings
-import os
-import pandas as pd
-import datetime as dt
-from datetime import datetime
-import matplotlib.pyplot as plt
-from .lstmann import predictionstart
-from .algo.generatedata import GetData
+from admins.models import cryptcurrencyratemodel, DatasetUpload
 
+# ---------------------------
+# User Home Page
+# ---------------------------
+def users(request):
+    return render(request,'users/users.html',{})
+def usersignup(request):
+    return render(request,'users/usersignup.html',{})
 
-# Create your views here.
-
+# ---------------------------
+# User Registration
+# ---------------------------
 def bituserregister(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -43,6 +43,9 @@ def bituserregister(request):
     return render(request, 'users/usersignup.html', {})
 
 
+# ---------------------------
+# User Login
+# ---------------------------
 def userlogincheck(request):
     if request.method == "POST":
         email = request.POST.get('email')
@@ -59,158 +62,318 @@ def userlogincheck(request):
                 print("User id At", check.id, status)
                 return render(request, 'users/userpage.html', {})
             else:
-                messages.success(request, 'Your Account Not at activated')
-                return render(request, 'users.html')
-            # return render(request, 'user/userpage.html',{})
+                messages.warning(request, 'Your Account is not activated yet.')
+                return render(request, 'users/users.html', {})
+        except BitUserRegisterModel.DoesNotExist:
+            messages.error(request, 'Invalid Email or Password.')
+            return render(request, 'users/users.html', {})
         except Exception as e:
-            print('Exception is ', str(e))
-            pass
-        messages.success(request, 'Invalid Email id and password')
-    return render(request, 'users.html', {})
+            print('Unexpected error:', e)
+            messages.error(request, 'Something went wrong. Try again.')
+            return render(request, 'users/users.html', {})
+
+    # Default GET request — just show login page
+    return render(request, 'users/usersignup.html', {})
 
 
+
+
+# ---------------------------
+# Start Trading - show available agents and cryptos
+# ---------------------------
 def StartUserTrading(request):
-    dict = AgentHadCrypto.objects.all()
-    return render(request, 'users/UserTrading.html', {'objects': dict})
+    email = request.session.get('email')
+    if not email:
+        return redirect('userlogincheck')
 
+    agents_crypto = AgentHadCrypto.objects.all()
+    return render(request, 'users/UserTrading.html', {'objects': agents_crypto})
+
+
+# ---------------------------
+# User selects quantity of crypto to buy
+# ---------------------------
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import HttpResponse
+from django.shortcuts import render
+from admins.models import cryptcurrencyratemodel
 
 def UserBuyQuantity(request):
-    quantity = request.POST.get('quantity')
-    currencyname = request.POST.get('currencyname')
-    agentemail = request.POST.get('agentemail')
-    print("Crypto = ", currencyname, ' Agent Email = ', agentemail, ' Quantity = ', quantity)
-    getDollers = cryptcurrencyratemodel.objects.get(currencytype=currencyname)
-    coinPrice = getDollers.doller
-    blockchain = 11.5
-    bitBlock = (coinPrice * blockchain) / 100
-    print("Block Bit Money ", bitBlock)
-    bitMoney = bitBlock + coinPrice
-    print("paid for 1 Bit ", bitMoney)
-    pay = float(quantity) * bitMoney
-    dict = {
-        'quantity': quantity,
-        'currencyname': currencyname,
-        'agentemail': agentemail,
-        'bitBlock': round(bitMoney, 2),
-        'payableAmmount': round(pay, 2)
-    }
+    if request.method == "POST":
+        quantity = request.POST.get('quantity')
+        currencyname = request.POST.get('currencyname')
+        agentemail = request.POST.get('agentemail')
+        print("Crypto =", currencyname, "Agent Email =", agentemail, "Quantity =", quantity)
 
-    return render(request, 'users/userbuytranscation.html', dict)
+        # Validate inputs
+        if not all([quantity, currencyname, agentemail]):
+            return HttpResponse("Missing required fields", status=400)
+        try:
+            quantity = float(quantity)  # Ensure quantity is a number
+        except ValueError:
+            return HttpResponse("Invalid quantity value", status=400)
 
+        # Query the model (case-insensitive)
+        try:
+            getDollers = cryptcurrencyratemodel.objects.get(currencytype__iexact=currencyname)
+            coinPrice = getDollers.doller
+            blockchain = 11.5
+            bitBlock = (coinPrice * blockchain) / 100
+            print("Block Bit Money", bitBlock)
+            bitMoney = bitBlock + coinPrice
+            print("Paid for 1 Bit", bitMoney)
+            pay = quantity * bitMoney
+            dict = {
+                'quantity': quantity,
+                'currencyname': currencyname,
+                'agentemail': agentemail,
+                'bitBlock': round(bitMoney, 2),
+                'payableAmmount': round(pay, 2)
+            }
+            return render(request, 'users/userbuytranscation.html', dict)
+        except cryptcurrencyratemodel.DoesNotExist:
+            print(f"Currency '{currencyname}' not found in database")
+            return HttpResponse(f"Currency '{currencyname}' not found", status=404)
+    return HttpResponse("Invalid request method", status=405)
+# ---------------------------
+# User completes the purchase
+# ---------------------------from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from admins.models import cryptcurrencyratemodel  # If needed elsewhere
+from .models import CustomerHadCoins, UserBuyingCryptoModel, BlockChainLedger  # Adjust imports based on your app
 
 def UserBuyingCoins(request):
+    email = request.session.get('email')
+    customername = request.session.get('loggeduser')
+    if not email:
+        return redirect('userlogincheck')
+
     if request.method == 'POST':
         currencyname = request.POST.get('currencyname')
-        quantity = int(request.POST.get('quantity'))
+        quantity = request.POST.get('quantity')
         agentemail = request.POST.get('agentemail')
-        singlecoingamount = float(request.POST.get('singlecoingamount'))
-        payableammount = float(request.POST.get('payableammount'))
+        singlecoingamount = request.POST.get('singlecoingamount')
+        payableammount = request.POST.get('payableammount')
         cardnumber = request.POST.get('cardnumber')
         nameoncard = request.POST.get('nameoncard')
         cardexpiry = request.POST.get('cardexpiry')
-        cvv = int(request.POST.get('cvv'))
+        cvv = request.POST.get('cvv')
 
-        customername = request.session['loggeduser']
-        email = request.session['email']
+        # Validate inputs
+        if not all([currencyname, quantity, agentemail, singlecoingamount, payableammount, cardnumber, nameoncard, cardexpiry, cvv]):
+            return HttpResponse("Missing required fields", status=400)
 
+        try:
+            quantity = float(quantity)  # Convert to float first
+            if not quantity.is_integer():
+                return HttpResponse("Quantity must be a whole number", status=400)
+            quantity = int(quantity)  # Convert to int if whole
+            singlecoingamount = float(singlecoingamount)
+            payableammount = float(payableammount)
+            cvv = int(cvv)
+        except ValueError:
+            return HttpResponse("Invalid numeric value for quantity, singlecoingamount, or cvv", status=400)
+
+        # Ledger calculation
         oneBlock = 11.5
-        fetchBit = payableammount/100
+        blockChainAmmount = (payableammount / 100) * oneBlock
 
-        blockChainAmmount = fetchBit*oneBlock
-        print("Ledger balance ",blockChainAmmount)
+        # Update agent crypto quantity
+        updateAgentCoins(agentemail, currencyname, quantity)  # Ensure this function exists
 
-        updateAgentCoins(agentemail,currencyname,quantity)
-        userQuantity = checkusercrypto(email, currencyname)
-        print("Agents Quantity ", userQuantity)
+        # Update user crypto quantity
+        userQuantity = checkusercrypto(email, currencyname)  # Ensure this function exists
         if userQuantity == 0:
-            print("AM in IF block")
             CustomerHadCoins.objects.create(currencyName=currencyname, customeremail=email, quantity=quantity)
         else:
-            totalQuanty = int(userQuantity) + quantity
-            print("AM in else block ", totalQuanty)
-            CustomerHadCoins.objects.filter(currencyName=currencyname, customeremail=email).update(quantity=totalQuanty)
+            totalQuantity = userQuantity + quantity
+            CustomerHadCoins.objects.filter(currencyName=currencyname, customeremail=email).update(quantity=totalQuantity)
 
-    UserBuyingCryptoModel.objects.create(customername=customername, email=email, currencyname=currencyname,quantity=quantity, agentemail=agentemail, singlecoingamount=singlecoingamount, payableammount=payableammount, cardnumber=cardnumber, nameoncard=nameoncard, cardexpiry=cardexpiry, cvv=cvv)
-    BlockChainLedger.objects.create(customeremail=email,agentemail=agentemail,currencyname=currencyname,quantity=quantity,paidammout=payableammount,blockchainmoney=blockChainAmmount)
+        # Record transactions
+        UserBuyingCryptoModel.objects.create(
+            customername=customername,
+            email=email,
+            currencyname=currencyname,
+            quantity=quantity,
+            agentemail=agentemail,
+            singlecoingamount=singlecoingamount,
+            payableammount=payableammount,
+            cardnumber=cardnumber,
+            nameoncard=nameoncard,
+            cardexpiry=cardexpiry,
+            cvv=cvv
+        )
 
-    dict1 = CustomerHadCoins.objects.filter(customeremail=email)
-    dict2 = UserBuyingCryptoModel.objects.filter(email=email)
-    return render(request, 'users/userbuyed.html', {"object1": dict1, 'object2': dict2})
+        BlockChainLedger.objects.create(
+            customeremail=email,
+            agentemail=agentemail,
+            currencyname=currencyname,
+            quantity=quantity,
+            paidammout=payableammount,
+            blockchainmoney=blockChainAmmount
+        )
+
+        dict1 = CustomerHadCoins.objects.filter(customeremail=email)
+        dict2 = UserBuyingCryptoModel.objects.filter(email=email)
+        return render(request, 'users/userbuyed.html', {"object1": dict1, 'object2': dict2})
+    
+    return HttpResponse("Invalid request method", status=405)
 
 
+# ---------------------------
+# Helper functions
+# ---------------------------
 def checkusercrypto(useremail, currencyname):
-    qty = 0
     try:
         obj = CustomerHadCoins.objects.get(currencyName=currencyname, customeremail=useremail)
-        qty = obj.quantity
-    except Exception as e:
-        qty = 0
-        print('Error is ', str(e))
-    return qty
+        return obj.quantity
+    except CustomerHadCoins.DoesNotExist:
+        return 0
 
-def updateAgentCoins(agentemail,currencyname,quantity):
-    check = AgentHadCrypto.objects.get(currencyName=currencyname,useremail=agentemail)
-    availableCquantity = check.quantity
-    balannceQua = availableCquantity - quantity
-    AgentHadCrypto.objects.filter(currencyName=currencyname, useremail=agentemail).update(quantity=balannceQua)
-    return availableCquantity
 
+def updateAgentCoins(agentemail, currencyname, quantity):
+    agent_crypto = AgentHadCrypto.objects.get(currencyName=currencyname, useremail=agentemail)
+    remaining_quantity = agent_crypto.quantity - quantity
+    AgentHadCrypto.objects.filter(currencyName=currencyname, useremail=agentemail).update(quantity=remaining_quantity)
+    return remaining_quantity
+
+
+# ---------------------------
+# User Transaction History
+# ---------------------------
 def UserTransactionsHistory(request):
-    email = request.session['email']
+    email = request.session.get('email')
+    if not email:
+        return redirect('userlogincheck')
+
     dict1 = CustomerHadCoins.objects.filter(customeremail=email)
     dict2 = UserBuyingCryptoModel.objects.filter(email=email)
     return render(request, 'users/userbuyed.html', {"object1": dict1, 'object2': dict2})
 
+
+# ---------------------------
+# Show available datasets for prediction
+# ---------------------------
+
+
 def UserPredictionTest(request):
-    dict = {}
-    dirName = settings.MEDIA_ROOT
-    listOfFile = getListOfFiles(dirName)
-    # print('List Files ',listOfFile)
-    count = 0;
-    for x in listOfFile:
-        count += 1
-        x1 = os.path.basename(x)
-        dict.update({count: x1})
-    print('List Of Files = ',dict)
-    return render(request,'users/predictTest.html',{'dict':dict})
+    email = request.session.get('email')
+    if not email:
+        return redirect('userlogincheck')
+
+    datasets = DatasetUpload.objects.all().order_by('-uploaded_at')[:5]
+    return render(request, 'users/UserPredictionTest.html', {'user_predictions': datasets})
 
 
-def getListOfFiles(dirName):
-    # create a list of file and sub directories
-    # names in the given directory
-    listOfFile = os.listdir(dirName)
-    allFiles = list()
-    # Iterate over all the entries
-    for entry in listOfFile:
-        # Create full path
-        fullPath = os.path.join(dirName, entry)
-        # If entry is a directory then get the list of files in this directory
-        if os.path.isdir(fullPath):
-            allFiles = allFiles + getListOfFiles(fullPath)
-        else:
-            allFiles.append(fullPath)
-
-    return allFiles
-
-def UserPredictTestProcess(request,value):
-    print('Dataset Name  is ',value)
-    fileName = settings.MEDIA_ROOT+"\\"+value
-    print('Dataset Name  is ', fileName)
-
-    obj = GetData()
-    list = obj.generateTrading()
-    #print("List Data is ",list)
-    pPath = settings.MEDIA_ROOT+"\\"+"predections.txt"
-    with open(pPath, 'a') as f:
-        #f.write("Date,Open,High,Low,Close,Volume,OpenInt")
-        #f.write('\n')
-        for item in list:
-            for x in item:
-                f.write("%s," % x)
-            f.write('\n')
+# ---------------------------
+# Display user predictions
+# ---------------------------
+# users/views.py
+import pandas as pd
+import numpy as np
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.decorators import login_required
+from sklearn.ensemble import RandomForestRegressor
+from admins.models import DatasetUpload # Your dataset model
+import json
+from datetime import datetime, timedelta
 
 
-    predictionstart(fileName)
 
 
-    return redirect('UserPredictionTest')
+def select_coin(request, dataset_id):
+    dataset = get_object_or_404(DatasetUpload, id=dataset_id)
+    coins = ['BTC', 'ETH', 'BNB', 'SOL']  # Add more if needed
+    return render(request, 'users/select_coin.html', {
+        'dataset': dataset,
+        'coins': coins
+    })
+
+from datetime import timedelta
+from django.shortcuts import render, get_object_or_404, redirect
+import pandas as pd
+import json
+from sklearn.ensemble import RandomForestRegressor
+
+def predict_coin(request):
+    if request.method == 'POST':
+        dataset_id = request.POST.get('dataset_id')
+        coin = request.POST.get('coin')
+        dataset = get_object_or_404(DatasetUpload, id=dataset_id)
+
+        # Read CSV
+        df = pd.read_csv(dataset.file.path)
+        df['timestamp'] = pd.to_datetime(df['timestamp'])
+        df = df.sort_values('timestamp')
+
+        # Handle duplicate/same-day timestamps (aggregate to daily close)
+        df['date'] = df['timestamp'].dt.date
+        df = df.groupby('date', as_index=False).agg({'close': 'last'})
+        df['timestamp'] = pd.to_datetime(df['date'])
+        df.drop('date', axis=1, inplace=True)
+
+        # Create lag features (previous 3 closing prices)
+        df['close_lag1'] = df['close'].shift(1)
+        df['close_lag2'] = df['close'].shift(2)
+        df['close_lag3'] = df['close'].shift(3)
+        df.dropna(inplace=True)
+
+        # Define features and target
+        X = df[['close_lag1', 'close_lag2', 'close_lag3']]
+        y = df['close']
+
+        # Train Random Forest model
+        model = RandomForestRegressor(n_estimators=5, random_state=42)
+        model.fit(X, y)
+
+        # 🔹 Predict next 3 days instead of 7
+        last_3 = df['close'].tail(3).values.tolist()
+        predictions = []
+        future_dates = []
+
+        last_date = df['timestamp'].iloc[-1]
+        current_lag = last_3.copy()
+
+        for i in range(1, 4):  # changed from range(1, 8) → range(1, 4)
+            pred = model.predict([current_lag])[0]
+            predictions.append(pred)
+            current_lag = current_lag[1:] + [pred]
+            next_date = last_date + timedelta(days=i)
+            future_dates.append(next_date.strftime('%Y-%m-%d'))
+
+        # Historical data for chart (last 10 days)
+        hist_dates = df['timestamp'].tail(10).dt.strftime('%Y-%m-%d').tolist()
+        hist_closes = df['close'].tail(10).tolist()
+
+        # Combine historical + predicted data
+        chart_labels = hist_dates + future_dates
+        chart_historical = hist_closes + [None] * 3   # changed 7 → 3
+        chart_predicted = [None] * 10 + predictions   # changed 7 → 3
+
+        chart_data = json.dumps({
+            'labels': chart_labels,
+            'datasets': [
+                {
+                    'label': 'Historical Close',
+                    'data': chart_historical,
+                    'borderColor': '#007bff',
+                    'fill': False
+                },
+                {
+                    'label': f'{coin} Predicted (Next 3 Days)',
+                    'data': chart_predicted,
+                    'borderColor': '#ff6b6b',
+                    'borderDash': [5, 5],
+                    'fill': False
+                }
+            ]
+        })
+
+        return render(request, 'users/prediction_result.html', {
+            'coin': coin,
+            'chart_data': chart_data,
+            'dataset': dataset
+        })
+
+    return redirect('users:UserPredictionTest')

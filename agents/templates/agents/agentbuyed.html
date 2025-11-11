@@ -1,0 +1,80 @@
+{% extends 'agents/agentbase.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="block p-4 shadow-sm bg-white rounded">
+
+                    <!-- Available Crypto Currencies -->
+                    <h3 style="color: black;">For Sale Available Crypto Currencies</h3>
+                    <div class="table-responsive mb-4">
+                        <table class="table" style="border: 1px solid black; border-collapse: collapse; color: black;">
+                            <thead style="color: white; background-color: #080808ff;">
+                                <tr>
+                                    <th style="border: 1px solid black;">S.No</th>
+                                    <th style="border: 1px solid black;">Currency Name</th>
+                                    <th style="border: 1px solid black;">Quantity</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: black;">
+                                {% for i in object1 %}
+                                <tr>
+                                    <td style="border: 1px solid black;">{{ forloop.counter }}</td>
+                                    <td style="border: 1px solid black;">{{ i.currencyName }}</td>
+                                    <td style="border: 1px solid black;">{{ i.quantity }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Agent Transaction History -->
+                    <h3 style="color: black;">Agent Transaction History</h3>
+                    <p style="color: black;">Current Trading</p>
+                    <div class="table-responsive">
+                        <table class="table" style="border: 1px solid black; border-collapse: collapse; color: black;">
+                            <thead style="color: white; background-color: #0c0b0bff;">
+                                <tr>
+                                    <th style="border: 1px solid black;">S.No</th>
+                                    <th style="border: 1px solid black;">Agent Name</th>
+                                    <th style="border: 1px solid black;">Your Email</th>
+                                    <th style="border: 1px solid black;">Crypto Currency Name</th>
+                                    <th style="border: 1px solid black;">Current Price</th>
+                                    <th style="border: 1px solid black;">Quantity</th>
+                                    <th style="border: 1px solid black;">Paid Amount</th>
+                                    <th style="border: 1px solid black;">Card Number</th>
+                                    <th style="border: 1px solid black;">Name on Card</th>
+                                    <th style="border: 1px solid black;">Expiry Date</th>
+                                    <th style="border: 1px solid black;">Date</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: black;">
+                                {% for i in object2 %}
+                                <tr>
+                                    <td style="border: 1px solid black;">{{ forloop.counter }}</td>
+                                    <td style="border: 1px solid black;">{{ i.agentName }}</td>
+                                    <td style="border: 1px solid black;">{{ i.agentemail }}</td>
+                                    <td style="border: 1px solid black;">{{ i.currencyname }}</td>
+                                    <td style="border: 1px solid black;">$ {{ i.currentprice }}</td>
+                                    <td style="border: 1px solid black;">{{ i.quantity }}</td>
+                                    <td style="border: 1px solid black;">$ {{ i.payableammount }}</td>
+                                    <td style="border: 1px solid black;">{{ i.cardnumber }}</td>
+                                    <td style="border: 1px solid black;">{{ i.nameoncard }}</td>
+                                    <td style="border: 1px solid black;">{{ i.cardexpiry }}</td>
+                                    <td style="border: 1px solid black;">{{ i.cdate }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
