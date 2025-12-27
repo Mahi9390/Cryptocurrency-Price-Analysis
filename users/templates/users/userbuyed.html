@@ -1,0 +1,91 @@
+{% extends 'users/userbase.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area py-5">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+
+        <div class="block bg-white shadow rounded p-4">
+
+          <!-- Purchased Coins -->
+          <h3 class="mb-3 text-primary fw-bold">Purchased Coins</h3>
+          <div class="table-responsive mb-5">
+            <table class="table table-sm table-bordered table-hover text-center align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th class="text-white">S.No</th>
+                  <th class="text-white">Currency Name</th>
+                  <th class="text-white">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for i in object1 %}
+                <tr class="text-dark">
+                  <td class="fw-bold">{{ forloop.counter }}</td>
+                  <td>{{ i.currencyName }}</td>
+                  <td>{{ i.quantity }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-muted">No Purchased Coins Found</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- User Transaction History -->
+          <h3 class="mb-3 text-dark fw-bold">User Transaction History</h3>
+          <p class="text-muted">Current Trading Details</p>
+          <div class="table-responsive">
+            <table class="table table-sm table-bordered table-hover text-center align-middle">
+              <thead class="table-dark">
+                <tr>
+                  <th class="text-white">S.No</th>
+                  <th class="text-white">Customer Name</th>
+                  <th class="text-white">Email</th>
+                  <th class="text-white">Crypto Currency</th>
+                  <th class="text-white">Quantity</th>
+                  <th class="text-white">Agent Email</th>
+                  <th class="text-white">1 Coin Amount ($)</th>
+                  <th class="text-white">Total Paid ($)</th>
+                  <th class="text-white">Card Number</th>
+                  <th class="text-white">Name on Card</th>
+                  <th class="text-white">Expiry Date</th>
+                  <th class="text-white">Date</th>
+                </tr>
+              </thead>
+              <tbody class="text-dark">
+                {% for i in object2 %}
+                <tr>
+                  <td class="fw-bold">{{ forloop.counter }}</td>
+                  <td>{{ i.customername }}</td>
+                  <td>{{ i.email }}</td>
+                  <td>{{ i.currencyname }}</td>
+                  <td>{{ i.quantity }}</td>
+                  <td>{{ i.agentemail }}</td>
+                  <td>$ {{ i.singlecoingamount }}</td>
+                  <td>$ {{ i.payableammount }}</td>
+                  <td>{{ i.cardnumber }}</td>
+                  <td>{{ i.nameoncard }}</td>
+                  <td>{{ i.cardexpiry }}</td>
+                  <td>{{ i.cdate }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="12" class="text-muted">No Transactions Found</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'users/userbase.html' %}
+{% load static %}
+
+{% block contents %}
+
+<h2 class="mb-4">Cryptocurrency Price Forecast (LSTM AI)</h2>
+
+<div class="alert alert-warning">
+    <strong>Note:</strong> This model was trained on Bitcoin data.
+    Best results for BTC. Other coins are experimental.
+</div>
+
+<form method="POST">
+    {% csrf_token %}
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label class="form-label">Cryptocurrency</label>
+            <select name="coin" class="form-select" required>
+                {% for coin in crypto_options %}
+                    <option value="{{ coin }}"
+                        {% if coin == selected_coin %}selected{% endif %}>
+                        {{ coin }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label class="form-label">Start Date</label>
+            <input type="date"
+                    name="start_date"
+                    class="form-control"
+                    value="{{ default_start|date:'Y-m-d' }}"
+                    required>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <label class="form-label">End Date</label>
+            <input type="date"
+                    name="end_date"
+                    class="form-control"
+                    value="{{ default_end|date:'Y-m-d' }}"
+                    max="{{ today|date:'Y-m-d' }}"
+                    required>
+        </div>
+
+        <div class="col-md-2 mb-3">
+            <label class="form-label">Forecast Days</label>
+            <input type="number"
+                   name="forecast_days"
+                   class="form-control"
+                   value="{{ forecast_days|default:7 }}"
+                   min="1"
+                   max="90"
+                   required>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary btn-lg">
+        Generate Forecast
+    </button>
+</form>
+
+<hr>
+
+{% if error %}
+    <div class="alert alert-danger mt-4">
+        {{ error }}
+    </div>
+{% endif %}
+
+{% if result %}
+    <div class="alert alert-info mt-4"
+         style="background-color:#debe54ff; color:{{ result.color }};">
+        {{ result.feedback }}
+    </div>
+
+    <h4 class="mt-4">Price Forecast Chart</h4>
+    <div class="mb-5">
+        {{ result.chart|safe }}
+    </div>
+
+    <h4>
+        Forecasted Prices
+        (Next {{ result.forecast_table|length }} Days)
+    </h4>
+
+    <table class="table table-striped table-hover mt-3">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Predicted Price (USD)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in result.forecast_table %}
+            <tr>
+                <!-- ✅ CORRECT KEYS -->
+                <td>{{ item.date }}</td>
+                <td>
+                    <strong>${{ item.price }}</strong>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+
+{% endblock %}

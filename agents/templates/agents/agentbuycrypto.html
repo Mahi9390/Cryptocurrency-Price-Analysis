@@ -1,0 +1,80 @@
+{% extends 'agents/agentbase.html' %}
+{% load static %}
+{% block contents %}
+
+<script>
+    $("#datepicker").datepicker({
+        format: "mm-yyyy",
+        viewMode: "months",
+        minViewMode: "months"
+    });
+</script>
+
+<section class="hero-area">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="block p-4 shadow-sm bg-white rounded">
+                    <h2 style="color: black;">Agent Buying The Crypto Currency</h2>
+
+                    <form class="mt-4" action="{% url 'agents:AgentTransactions' %}" method="POST">
+                        {% csrf_token %}
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Currency Name</label>
+                            <input type="text" class="form-control" name="currencyname" value="{{ currencyname }}" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Current Price in $</label>
+                            <input type="text" class="form-control" name="currentprice" value="{{ currentPrice }}" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Buying Quantity</label>
+                            <input type="text" class="form-control" name="quantity" value="{{ quntity }}" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Payable Amount $</label>
+                            <input type="text" class="form-control" name="payableammount" value="{{ PayableAmmount }}" readonly>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Credit/Debit Card Number</label>
+                            <input type="text" class="form-control" name="cardnumber" pattern="[123456789][0-9]{15}" placeholder="Credit / Debit Card Number" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Name On Card</label>
+                            <input type="text" class="form-control" name="nameoncard" style="text-transform: uppercase;" placeholder="Name On Card" required>
+                        </div>
+
+                        <div class="form-group mb-3">
+                            <label style="color: black;">Expiry Date</label>
+                            <input type="month" class="form-control" name="cardexpiry" id="datepicker" min="2020-01" max="2030-12" placeholder="Card Expiry Date" required>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label style="color: black;">CVV Number</label>
+                            <input type="text" class="form-control" name="cvv" pattern="[12345678][0-9]{2}" placeholder="CVV Number" required>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">Buy Crypto Currency</button>
+                    </form>
+
+                    <div class="text-center mt-3">
+                        {% if messages %}
+                            {% for message in messages %}
+                                <span style="color: yellow; font-weight: bold;">{{ message }}</span><br>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}

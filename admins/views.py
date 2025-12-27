@@ -1,15 +1,19 @@
-from django.shortcuts import render,HttpResponse
+from django.shortcuts import render, HttpResponse
 from django.contrib import messages
-from users.models import BitUserRegisterModel,BlockChainLedger
+from users.models import BitUserRegisterModel, BlockChainLedger
 from agents.models import BitAgentRegisterModel
-from .models import cryptcurrencyratemodel,CurrencyUpdateModel
+from .models import cryptcurrencyratemodel, CurrencyUpdateModel
 import string
 import random
 from datetime import date
 from django.db.models import Sum
+import pandas as pd
+from django.shortcuts import render, redirect, get_object_or_404
 
-# Create your views here.
 
+# ----------------------
+# Admin login
+# ----------------------
 def adminlogincheck(request):
     if request.method=='POST':
         usrid = request.POST.get('adminid')
@@ -19,7 +23,7 @@ def adminlogincheck(request):
             return render(request, 'admins/adminhome.html')
         else:
             messages.success(request, 'Please Check Your Login Details')
-    return render(request, 'admins.html')
+    return render(request, 'admins/admins.html')
 
 def viewusers(request):
     dict = BitUserRegisterModel.objects.all()
@@ -130,7 +134,6 @@ def updatecryptocurrency(request,curr):
         return render(request, 'admins/cryptoratecurrent.html', {'objects': dict, 'objects1': dict2})
 
 
-
 def AdminGetLedger(request):
     check = BlockChainLedger.objects.aggregate(Sum('blockchainmoney'))
     x = check.get("blockchainmoney__sum")
@@ -138,3 +141,4 @@ def AdminGetLedger(request):
     print('Totoal Ledger Sum ', x)
     dict = BlockChainLedger.objects.all()
     return render(request, 'admins/adminsblock.html', {'objects': dict, 'ledger': x})
+

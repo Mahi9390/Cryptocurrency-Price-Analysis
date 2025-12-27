@@ -1,0 +1,48 @@
+  {% extends 'base.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area py-5" style="background: linear-gradient(to right, #f0f4f8, #d9e2ec);">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-lg rounded p-4 animate__animated animate__fadeInUp" style="background: linear-gradient(135deg, #667eea, #0d0e0eff); color: #ffffff; border: none;">
+
+          <h2 class="text-center mb-4 fw-bold" style="text-shadow: 1px 1px 4px rgba(0,0,0,0.3);">Admin Login</h2>
+
+          <!-- Login Form -->
+          <form class="text-left mt-4" action="{% url 'admins:adminlogincheck' %}" method="POSt">
+            {% csrf_token %}
+            <div class="mb-3">
+              <input type="text" class="form-control" name="adminid" placeholder="Admin Login ID*" required style="border-radius: 8px;">
+            </div>
+            <div class="mb-3">
+              <input type="password" class="form-control" name="pswd" placeholder="Password*" required style="border-radius: 8px;">
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-light btn-block fw-bold" style="transition: 0.3s; border-radius: 8px;">Sign In</button>
+            </div>
+          </form>
+
+          <!-- Messages -->
+          {% if messages %}
+          <div class="mt-3 text-center">
+            {% for message in messages %}
+              <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Animate.css CDN for animations -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+{% endblock %}

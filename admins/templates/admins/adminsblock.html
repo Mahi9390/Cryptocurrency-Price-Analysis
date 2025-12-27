@@ -1,0 +1,56 @@
+{% extends 'admins/adminbase.html' %}
+{% load static %}
+{% block contents %}
+
+<section class="hero-area py-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="block shadow-sm p-4 bg-white rounded">
+
+          <!-- Current Ledger Blocks -->
+          <h2 class="mb-3 p-2 rounded text-center text-white bg-dark">
+            Current Ledger Blocks: ${{ ledger }}
+          </h2>
+          <p class="text-center text-muted mb-4">Current Transactions of the Trading</p>
+
+          <!-- Ledger Transactions Table -->
+          <div class="table-responsive mb-4">
+            <table class="table table-sm table-bordered table-hover text-center align-middle text-dark">
+              <thead class="table-dark text-white">
+                <tr>
+                  <th>S.No</th>
+                  <th>Customer Email</th>
+                  <th>Agent Email</th>
+                  <th>Coin Name</th>
+                  <th>Quantity</th>
+                  <th>Paid Amount</th>
+                  <th>Ledger Balance</th>
+                </tr>
+              </thead>
+              <tbody class="text-dark">
+                {% for i in objects %}
+                <tr>
+                  <td>{{ forloop.counter }}</td>
+                  <td>{{ i.customeremail }}</td>
+                  <td>{{ i.agentemail }}</td>
+                  <td>{{ i.currencyname }}</td>
+                  <td>{{ i.quantity }}</td>
+                  <td>$ {{ i.paidammout }}</td>
+                  <td>$ {{ i.blockchainmoney }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+
+          
+          
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

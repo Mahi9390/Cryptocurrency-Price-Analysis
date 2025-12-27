@@ -1,11 +1,18 @@
 from django.db import models
-import datetime
 from django.utils import timezone
+import os
 
-# Create your models here.
+
+
+
+
+def dataset_file_path(instance, filename):
+    timestamp = timezone.now().strftime("%Y%m%d_%H%M%S")
+    basename, ext = os.path.splitext(filename)
+    return f'datasets/{timestamp}_{basename}{ext}'
 
 class cryptcurrencyratemodel(models.Model):
-    currencytype=models.CharField(max_length=100, primary_key=True)
+    currencytype=models.CharField(max_length=100, null=True, blank=True)
     doller=models.FloatField()
     rupee=models.FloatField()
     originalprice = models.FloatField()
@@ -30,4 +37,5 @@ class CurrencyUpdateModel(models.Model):
     class Meta:
         db_table = 'currencychnagetable'
         unique_together = ('currencyname', 'changedate',)
+
 

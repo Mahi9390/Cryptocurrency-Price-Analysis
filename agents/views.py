@@ -1,15 +1,25 @@
-from django.shortcuts import render, HttpResponse,redirect
-from .models import BitAgentRegisterModel, AgentHadCrypto,AgentBuyCryptoModel
+from django.shortcuts import render, redirect
 from django.contrib import messages
-from admins.models import cryptcurrencyratemodel, CurrencyUpdateModel
-from users.models import BlockChainLedger
+from django.db import IntegrityError
 from django.db.models import Sum
 from django.conf import settings
 import os
+
+from .models import BitAgentRegisterModel, AgentHadCrypto, AgentBuyCryptoModel
+from admins.models import cryptcurrencyratemodel, CurrencyUpdateModel
+from users.models import BlockChainLedger
 from users.lstmann import predictionstart
 from users.algo.generatedata import GetData
-# Create your views here.
 
+# -----------------------------
+# AGENT REGISTRATION
+# -----------------------------
+
+def agents(request):
+    return render(request,'agents/agents.html',{})
+
+def agentsignup(request):
+    return render(request,'agents/agentsignup.html',{})
 
 def bitagentregister(request):
     if request.method == 'POST':
@@ -42,31 +52,56 @@ def bitagentregister(request):
     return render(request, 'agents/agentsignup.html', {})
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+
 def agentlogincheck(request):
     if request.method == "POST":
-        email = request.POST.get('email')
-        pswd = request.POST.get('pswd')
-        print("Email = ", email, ' Password = ', pswd)
-        try:
-            check = BitAgentRegisterModel.objects.get(email=email, pswd=pswd)
-            status = check.status
-            print('Status is = ', status)
-            if status == "activated":
-                request.session['id'] = check.id
-                request.session['loggedagent'] = check.username
-                request.session['email'] = check.email
-                print("User id At", check.id, status)
-                return render(request, 'agents/agentpage.html', {})
-            else:
-                messages.success(request, 'Your Account Not at activated')
-                return render(request, 'users.html')
-            # return render(request, 'user/userpage.html',{})
-        except Exception as e:
-            print('Exception is ', str(e))
-            pass
-        messages.success(request, 'Invalid Email id and password')
-    return render(request, 'agents.html', {})
+        email = (request.POST.get('email') or '').strip()
+        pswd = (request.POST.get('pswd') or '').strip()
+        print("Login attempt — Email:", repr(email), "Password:", repr(pswd))
 
+        # Try to find a matching agent (case-insensitive email)
+        agent = BitAgentRegisterModel.objects.filter(email__iexact=email, pswd=pswd).first()
+
+        if agent:
+            status = (agent.status or '').strip().lower()
+            print("Found agent id:", agent.id, "status:", repr(agent.status))
+
+            if status == "activated":
+                # Set session variables
+                request.session['id'] = agent.id
+                request.session['loggedagent'] = agent.username
+                request.session['email'] = agent.email
+                print("Login successful for agent id:", agent.id)
+
+                # Prefer redirect to avoid form resubmission
+                return render(request, 'agents/agentpage.html', {})  # if you have a named URL for agent dashboard
+                # return render(request, 'agents/agentpage.html', {})  # fallback
+            else:
+                messages.error(request, 'Your account is not activated.')
+                return render(request, 'agents/agents.html', {})
+        else:
+            same_email = BitAgentRegisterModel.objects.filter(email__iexact=email).first()
+            if same_email:
+                print("Password mismatch for email:", email)
+                messages.error(request, 'Invalid password for this email.')
+            else:
+                print("No account found with email:", email)
+                messages.error(request, 'Invalid email or password.')
+
+            return render(request, 'agents/agents.html', {})  # Return login page again
+
+    # For GET request — just show login page
+    return render(request, 'agents/agentsignup.html', {})
+
+
+
+
+# agents/views.py
+from django.shortcuts import render
+
+import os
 
 def AgentBuyCrypto(request):
     dict = cryptcurrencyratemodel.objects.all()
@@ -136,62 +171,63 @@ def AgentHadCoins(request):
 
     return render(request,'agents/agentbuyed.html',{"object1":dict1,'object2':dict2})
 
-def AgentLedgerStatus(request):
-    email = request.session['email']
-    check = BlockChainLedger.objects.aggregate(Sum('blockchainmoney'))
-    x = check.get("blockchainmoney__sum")
-    x = round(x, 2)
-    print('Totoal Ledger Sum ',x)
-    dict = BlockChainLedger.objects.filter(agentemail=email)
-    return render(request,'agents/agentblock.html',{'objects':dict,'ledger':x})
-
-def AgentPredectionTest(request):
-    dict = {}
-    dirName = settings.MEDIA_ROOT
-    listOfFile = getListOfFiles(dirName)
-    # print('List Files ',listOfFile)
-    count = 0;
-    for x in listOfFile:
-        count += 1
-        x1 = os.path.basename(x)
-        dict.update({count: x1})
-    print('List Of Files = ', dict)
-    return render(request, 'agents/agentpredictTest.html', {'dict': dict})
 
 
-def getListOfFiles(dirName):
-    # create a list of file and sub directories
-    # names in the given directory
-    listOfFile = os.listdir(dirName)
-    allFiles = list()
-    # Iterate over all the entries
-    for entry in listOfFile:
-        # Create full path
-        fullPath = os.path.join(dirName, entry)
-        # If entry is a directory then get the list of files in this directory
-        if os.path.isdir(fullPath):
-            allFiles = allFiles + getListOfFiles(fullPath)
-        else:
-            allFiles.append(fullPath)
 
-    return allFiles
+# users/views.py
 
-def AgentredictTestProcess(request,value):
-    print("FIle is ",value)
+# agents/views.py
 
-    fileName = settings.MEDIA_ROOT + "\\" + value
-    print('Dataset Name  is ', fileName)
-    obj = GetData()
-    list = obj.generateTrading()
-    # print("List Data is ",list)
-    pPath = settings.MEDIA_ROOT + "\\" + "predections.txt"
-    with open(pPath, 'a') as f:
-        # f.write("Date,Open,High,Low,Close,Volume,OpenInt")
-        # f.write('\n')
-        for item in list:
-            for x in item:
-                f.write("%s," % x)
-            f.write('\n')
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from datetime import date, timedelta
 
-    predictionstart(fileName)
-    return redirect("AgentPredectionTest")
+from users.utils.prediction import predict_crypto, CRYPTO_SYMBOLS
+
+
+
+def prediction_view(request):
+    result = None
+    error = None
+
+    # Default dates
+    today = date.today()
+    default_end = today - timedelta(days=1)
+    default_start = default_end - timedelta(days=365 * 2)
+
+    # Defaults for form persistence
+    selected_coin = "Bitcoin"
+    start_date = default_start
+    end_date = default_end
+    forecast_days = 7
+
+    if request.method == "POST":
+        selected_coin = request.POST.get("coin")
+        start_date = request.POST.get("start_date")
+        end_date = request.POST.get("end_date")
+        forecast_days = int(request.POST.get("forecast_days", 7))
+
+        try:
+            result = predict_crypto(
+                coin_name=selected_coin,
+                start_date_str=start_date,
+                end_date_str=end_date,
+                forecast_days=forecast_days
+            )
+        except Exception as e:
+            error = str(e)
+
+    return render(
+        request,
+        "agents/prediction.html",
+        {
+            "crypto_options": CRYPTO_SYMBOLS.keys(),
+            "result": result,
+            "error": error,
+            "selected_coin": selected_coin,
+            "default_start": start_date,
+            "default_end": end_date,
+            "forecast_days": forecast_days,
+            "today": today,
+        }
+    )
