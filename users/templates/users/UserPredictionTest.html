@@ -1,0 +1,41 @@
+{% extends 'users/userbase.html' %}
+{% load static %}
+{% block contents %}
+<section class="hero-area py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-10">
+        <div class="block bg-white shadow rounded p-4">
+          <h3 class="mb-4 text-center text-dark">Latest Datasets for Prediction</h3>
+          <div class="table-responsive">
+            <table class="table table-bordered text-center">
+              <thead class="table-dark">
+                <tr>
+                  <th>Dataset Name</th>
+                  <th>Uploaded At</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for p in user_predictions %}
+                <tr>
+                  <td style="background-color: #f2f2f2; color: black;">{{ p.file.name|cut:"datasets/" }}</td>
+                  <td style="background-color: #f2f2f2; color: black;">{{ p.uploaded_at|date:"Y-m-d H:i:s" }}</td>
+                  <td>
+                    <a href="{{ p.file.url }}" class="btn btn-sm btn-primary" target="_blank">View</a>
+                    <a href="{% url 'users:select_coin' dataset_id=p.id %}" class="btn btn-sm btn-success ms-2">Predict</a>
+                  </td>
+                </tr>
+                {% empty %}
+                <tr>
+                  <td colspan="3" class="text-muted">No datasets available.</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}

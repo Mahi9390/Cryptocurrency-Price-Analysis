@@ -1,6 +1,10 @@
 from django.db import models
 from django.utils import timezone
+<<<<<<< HEAD
  # link to admin dataset
+=======
+from admins.models import DatasetUpload  # link to admin dataset
+>>>>>>> 4e3276bf1ebc3f406edcdefb65dc022f67580260
 
 # --------------------------
 # Agent Registration
@@ -73,3 +77,39 @@ class AgentBuyCryptoModel(models.Model):
         db_table = 'AgentBuyedTransactions'
 
 
+# --------------------------
+# Agent Predictions
+# --------------------------
+   # ✅ optional, but ensures table name
+
+# agents/models.py
+from admins.models import DatasetUpload  # ✅ Correct import
+
+class DatasetUpload(models.Model):
+    file = models.FileField(upload_to='datasets/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def filename(self):
+        return self.file.name.split('/')[-1]
+
+    def __str__(self):
+        return self.filename
+
+    
+from admins.models import DatasetUpload  # ✅ important!
+
+class AgentPredictionModel(models.Model):
+    currency_name = models.CharField(max_length=100)
+    predicted_value = models.FloatField()
+    actual_value = models.FloatField()
+    accuracy = models.FloatField()
+
+    # ✅ This now correctly references admin’s DatasetUpload table
+    dataset = models.ForeignKey(DatasetUpload, on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return self.currency_name
+
+    class Meta:
+        db_table = 'agent_predictions'

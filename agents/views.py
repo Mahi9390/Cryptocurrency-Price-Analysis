@@ -100,7 +100,6 @@ def agentlogincheck(request):
 
 # agents/views.py
 from django.shortcuts import render
-
 import os
 
 def AgentBuyCrypto(request):
